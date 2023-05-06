@@ -1,0 +1,2 @@
+export const DOWNLOAD_URL = "DOWNLOAD_URL";
+export const DOWNLOAD_TXT_URL = 'DOWNLOAD_TXT_URL';   
