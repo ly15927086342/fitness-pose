@@ -10,6 +10,7 @@ import {
 } from "../constants";
 import { angVector, genVector } from "./math";
 import { extremeValueDetect, getKeyParam, mean } from "./analysis";
+import { Speaker } from "./speak";
 
 /**
  * 特征数据记录
@@ -97,6 +98,8 @@ export class Log {
                   if (this._analysis.extremes.length % 2 === 0) {
                     // 极值达到偶数，count+1
                     this._analysis.count++;
+                    Speaker.getInstance().stop();
+                    Speaker.getInstance()?.speak(this._analysis.count);
                     console.log(this._analysis.count);
                   }
                 } else {

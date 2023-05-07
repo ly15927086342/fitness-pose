@@ -5,18 +5,12 @@ import MediaDetector from "./components/MediaDetector.vue";
 import ImageDetector from "./components/ImageDetector.vue";
 import Download from "./components/Download.vue";
 import Analysis from "./components/Analysis.vue";
-import { pose } from "./util";
 
 export default {
   data() {
     return {
       tab: "video",
     };
-  },
-  watch: {
-    tab() {
-      pose.reset();
-    }
   },
   components: {
     PoseDetector,

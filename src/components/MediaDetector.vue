@@ -2,7 +2,7 @@
 // import { Camera } from "@mediapipe/camera_utils";
 // import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
 import { VIDEO_STATUS, MODEL_STATUS } from "../constants";
-import { Log, Media } from "../util";
+import { Log, Media, Speaker } from "../util";
 
 let pose = new Pose({
   locateFile: (file) => {
@@ -106,6 +106,7 @@ export default {
           this.mediaState = this.media?.stop();
           this.media?.ctxClear();
           camera.stop();
+          Speaker.getInstance().stop();
           log.download();
           break;
         default:
