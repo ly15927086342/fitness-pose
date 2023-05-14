@@ -113,19 +113,22 @@ export default {
           markLine: {
             data: [
               {
+                // yAxis: this.extremeValues[key].maxQuant,
                 yAxis: this.extremeValues[key].maxAvg,
               },
               {
+                // yAxis: this.extremeValues[key].minQuant,
                 yAxis: this.extremeValues[key].minAvg,
               },
               ...this.extremeValues[key].extremes.map((i) => {
                 return {
-                  xAxis: i,
+                  xAxis: i.val,
                 };
               }),
             ],
             lineStyle: {
               width: 2,
+              color: 'rgb(255,0,0)'
             },
             silent: true,
           },

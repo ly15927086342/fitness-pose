@@ -7,7 +7,7 @@ export default {
   data() {
     return {
       downloads: [],
-      txtDownloads: []
+      txtDownloads: [],
     };
   },
   mounted() {
@@ -24,7 +24,7 @@ export default {
     },
     downloadTxtCb(url) {
       this.txtDownloads.push(url);
-    }
+    },
   },
 };
 </script>
@@ -47,9 +47,9 @@ export default {
           v-for="(url, index) in txtDownloads"
           :key="index"
           :href="url"
-          download="reult.txt"
-          >数据{{ index + 1 }}</a
-        >
+          download="result.txt"
+          >数据{{ index + 1 }}
+        </a>
         <div v-show="downloads.length === 0">空</div>
       </v-list-item>
     </v-list>
