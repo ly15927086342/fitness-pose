@@ -164,8 +164,6 @@ export class Log {
                     Speaker.getInstance().stop();
                     Speaker.getInstance()?.speak(this._analysis.count);
                     console.log(this._analysis.count);
-                  } else {
-                    console.log("no count");
                   }
                 } else {
                   this._analysis.extremeArr = [];
