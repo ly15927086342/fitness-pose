@@ -25,6 +25,8 @@ export class Log {
 
   private _data: Record<string, unknown>[] = [];
 
+  private _currentInd = 0;
+
   private _threshold: number = 50;
 
   private _analysis: any = {
@@ -65,32 +67,39 @@ export class Log {
         if (p === "length") {
           target[p] = newValue;
           // 每50个点重新计算一次关键特征
-          if (this._data.length % 50 === 0) {
+          if (this._data.length % 100 === 0) {
             const key = getKeyParam(this._data, [
               ...MODEL_LEFT_KEY_PARAM,
               ...MODEL_RIGHT_KEY_PARAM,
             ]);
             if (this._analysis.key !== key) {
+              if (this._analysis.key !== "") {
+                Speaker.getInstance().stop();
+                Speaker.getInstance().speak("动作改变，开始重新计数");
+              }
+              this._currentInd = this._data.length - 1;
               this._analysis.key = key;
               this._analysis.preProcess = false;
-              console.log("recal");
             }
           }
           if (this._analysis.key !== "") {
             if (!this._analysis.preProcess) {
               const res = extremeValueDetect(
-                this._data.map((d) => d[this._analysis.key]),
+                this._data
+                  .slice(this._currentInd)
+                  .map((d) => d[this._analysis.key]),
                 0.1
               );
               this._analysis.preProcess = true;
               this._analysis.count = res.count;
               this._analysis.lastK = res.lastK;
-              this._analysis.extremeArr = res.extremeArr;
-              this._analysis.extremes = res.extremes;
+              this._analysis.extremeArr = [];
+              this._analysis.extremes = [];
             } else {
-              const i = this._data.length - 1;
-              const y2 = this._data[i][this._analysis.key] as number;
-              const y1 = this._data[i - 1][this._analysis.key] as number;
+              const validData = this._data.slice(this._currentInd);
+              const i = validData.length - 1;
+              const y2 = validData[i][this._analysis.key] as number;
+              const y1 = validData[i - 1][this._analysis.key] as number;
               const k = (y2 - y1) / 1.0;
 
               if (Math.abs(k) <= this._analysis.tolerance) {
@@ -107,19 +116,19 @@ export class Log {
                   let val = 0;
                   if (Math.round(target - 0.5) === target) {
                     // 整数
-                    val = this._data[target][this._analysis.key] as number;
+                    val = validData[target][this._analysis.key] as number;
                   } else {
-                    if (target + 0.5 < this._data.length) {
+                    if (target + 0.5 < validData.length) {
                       val =
-                        ((this._data[target - 0.5][
+                        ((validData[target - 0.5][
                           this._analysis.key
                         ] as number) +
-                          (this._data[target + 0.5][
+                          (validData[target + 0.5][
                             this._analysis.key
                           ] as number)) /
                         2;
                     } else {
-                      val = this._data[target - 0.5][
+                      val = validData[target - 0.5][
                         this._analysis.key
                       ] as number;
                     }
@@ -147,7 +156,10 @@ export class Log {
                   }
                   // 是否计数
                   const whetherCount = judgeExtreme(this._analysis.extremes);
-                  if (whetherCount && this._analysis.extremes.length % 2 === 0) {
+                  if (
+                    whetherCount &&
+                    this._analysis.extremes.length % 2 === 0
+                  ) {
                     this._analysis.count++;
                     Speaker.getInstance().stop();
                     Speaker.getInstance()?.speak(this._analysis.count);
