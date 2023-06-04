@@ -9,7 +9,12 @@ import {
   MODEL_RIGHT_KEY_PARAM,
 } from "../constants";
 import { angVector, genVector } from "./math";
-import { extremeValueDetect, getKeyParam, mean } from "./analysis";
+import {
+  extremeValueDetect,
+  getKeyParam,
+  judgeExtreme,
+  mean,
+} from "./analysis";
 import { Speaker } from "./speak";
 
 /**
@@ -59,12 +64,17 @@ export class Log {
         // length最后变更
         if (p === "length") {
           target[p] = newValue;
-          if (this._analysis.key === "" && this._data.length > 20) {
+          // 每50个点重新计算一次关键特征
+          if (this._data.length % 50 === 0) {
             const key = getKeyParam(this._data, [
               ...MODEL_LEFT_KEY_PARAM,
               ...MODEL_RIGHT_KEY_PARAM,
             ]);
-            this._analysis.key = key;
+            if (this._analysis.key !== key) {
+              this._analysis.key = key;
+              this._analysis.preProcess = false;
+              console.log("recal");
+            }
           }
           if (this._analysis.key !== "") {
             if (!this._analysis.preProcess) {
@@ -84,23 +94,66 @@ export class Log {
               const k = (y2 - y1) / 1.0;
 
               if (Math.abs(k) <= this._analysis.tolerance) {
-                this._analysis.extremeArr.push(i - 0.5);
+                this._analysis.extremeArr.push(i + 0.5);
               } else {
                 if (this._analysis.lastK * k < 0) {
                   let target = 0;
                   if (this._analysis.extremeArr.length > 0) {
-                    target = mean(this._analysis.extremeArr);
-                    this._analysis.extremeArr = [];
+                    target = Math.floor(mean(this._analysis.extremeArr));
                   } else {
-                    target = i - 0.5;
+                    target = i + 0.5;
                   }
-                  this._analysis.extremes.push(target);
-                  if (this._analysis.extremes.length % 2 === 0) {
-                    // 极值达到偶数，count+1
+                  // 算极值
+                  let val = 0;
+                  if (Math.round(target - 0.5) === target) {
+                    // 整数
+                    val = this._data[target][this._analysis.key] as number;
+                  } else {
+                    if (target + 0.5 < this._data.length) {
+                      val =
+                        ((this._data[target - 0.5][
+                          this._analysis.key
+                        ] as number) +
+                          (this._data[target + 0.5][
+                            this._analysis.key
+                          ] as number)) /
+                        2;
+                    } else {
+                      val = this._data[target - 0.5][
+                        this._analysis.key
+                      ] as number;
+                    }
+                  }
+
+                  if (this._analysis.lastK < 0) {
+                    // 极小值
+                    this._analysis.extremes.push({
+                      val: target,
+                      type: "min",
+                      res: val,
+                      ind: this._analysis.extremes.length,
+                    });
+                  } else {
+                    // 极大值
+                    this._analysis.extremes.push({
+                      val: target,
+                      type: "max",
+                      res: val,
+                      ind: this._analysis.extremes.length,
+                    });
+                  }
+                  if (this._analysis.extremeArr.length > 0) {
+                    this._analysis.extremeArr = [];
+                  }
+                  // 是否计数
+                  const whetherCount = judgeExtreme(this._analysis.extremes);
+                  if (whetherCount && this._analysis.extremes.length % 2 === 0) {
                     this._analysis.count++;
                     Speaker.getInstance().stop();
                     Speaker.getInstance()?.speak(this._analysis.count);
                     console.log(this._analysis.count);
+                  } else {
+                    console.log("no count");
                   }
                 } else {
                   this._analysis.extremeArr = [];

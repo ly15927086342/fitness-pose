@@ -4,6 +4,7 @@ import cloneDeep from 'lodash-es/cloneDeep';
 
 /**
  * 计算关键特征
+ * 算法：首先，过滤出可见性大于0.8的特征角度，计算标准差和极差，取最大标准差和最大极差的特征作为关键特征
  * @param {*} rawData 
  * @param {*} params 
  * @returns 
@@ -38,6 +39,7 @@ export function getKeyParam(rawData, params) {
       pickedChar = key;
     }
   });
+  console.log(pickedChar);
   return pickedChar;
 }
 
@@ -151,8 +153,6 @@ export function extremeValueDetect(data, tolerance) {
   let lastK = 0; // 上一个点的斜率
   let extremeArr = []; // 拐点（斜率小于阈值的点集）
   const result = []; // 极值集合
-  const maxRes = []; // 极大值集合
-  const minRes = []; // 极小值集合
   let period = 0;
   for (let i = 0; i < len - 1; i++) {
     const y2 = data[i + 1];
@@ -168,7 +168,7 @@ export function extremeValueDetect(data, tolerance) {
         let target = 0;
         // 多个拐点，取平均位置作为极值点位置
         if (extremeArr.length > 0) {
-          target = mean(extremeArr);
+          target = Math.floor(mean(extremeArr));
         } else {
           target = i + 0.5;
         }
@@ -178,12 +178,16 @@ export function extremeValueDetect(data, tolerance) {
           // 整数
           val = data[target];
         } else {
-          val = (data[target - 0.5] + data[target + 0.5]) / 2;
+          if (target + 0.5 < data.length) {
+            val = (data[target - 0.5] + data[target + 0.5]) / 2;
+          } else {
+            val = data[target - 0.5]
+          }
         }
 
         if (lastK < 0) {
           // 极小值
-          minRes.push(val);
+          // minRes.push(val);
           result.push({
             val: target,
             type: 'min',
@@ -192,7 +196,7 @@ export function extremeValueDetect(data, tolerance) {
           });
         } else {
           // 极大值
-          maxRes.push(val);
+          // maxRes.push(val);
           result.push({
             val: target,
             type: 'max',
@@ -211,7 +215,9 @@ export function extremeValueDetect(data, tolerance) {
     }
   }
 
-  // 去掉最大值和最小值
+  // 极值的均值和标准差需要去掉最大值和最小值，减少误差
+  const maxRes = result.filter(item => item.type === 'max').map(item => item.res); // 极大值集合
+  const minRes = result.filter(item => item.type === 'min').map(item => item.res); // 极小值集合
   minRes.sort();
   maxRes.sort();
   const meanMin = jStat.mean(minRes.slice(1, -1));
@@ -265,7 +271,7 @@ export function extremeValueDetect(data, tolerance) {
       cloneResult.splice(i, 1);
     }
   }
-  if (cloneResult[0].ind !== cloneResult[1].ind - 1) {
+  if (cloneResult.length >= 2 && cloneResult[0].ind !== cloneResult[1].ind - 1) {
     cloneResult.splice(0, 1);
   }
 
@@ -290,5 +296,48 @@ export function extremeValueDetect(data, tolerance) {
     period,
     lastK,
     extremeArr
+  }
+}
+
+/**
+ * 实时判断极值点是否符合计数标准
+ * @param {*} extremes 
+ * @returns 
+ */
+export function judgeExtreme(extremes) {
+  // 极值的均值和标准差需要去掉最大值和最小值，减少误差
+  const maxRes = extremes.filter(item => item.type === 'max').map(item => item.res); // 极大值集合
+  const minRes = extremes.filter(item => item.type === 'min').map(item => item.res); // 极小值集合
+  minRes.sort();
+  maxRes.sort();
+  const meanMin = jStat.mean(minRes.slice(1, -1));
+  const stMin = Math.min(0.1, jStat.stdev(minRes.slice(1, -1)));
+  const meanMax = jStat.mean(maxRes.slice(1, -1));
+  const stMax = Math.min(0.1, jStat.stdev(maxRes.slice(1, -1)));
+
+  if (extremes.length < 2) return true;
+
+  // 极大值和极小值必须成对出现，否则成对剔除
+  if (extremes[extremes.length - 1].type === extremes[extremes.length - 2].type) {
+    // extremes.splice(-1, 1);
+    return false;
+  }
+
+  const val = extremes[extremes.length - 1].res;
+  // 剔除不在阈值范围内的极值，极大值阈值为[avg-3st,avg+5st]，极小值阈值为[avg-5st,avg+3st]
+  if (extremes[extremes.length - 1].type === 'min') {
+    if (val >= meanMin - 5 * stMin && val <= meanMin + 3 * stMin) {
+      return true;
+    } else {
+      // extremes.splice(-1, 1);
+      return false;
+    }
+  } else {
+    if (val >= meanMax - 3 * stMax && val <= meanMax + 5 * stMax) {
+      return true;
+    } else {
+      // extremes.splice(-1, 1);
+      return false;
+    }
   }
 }
