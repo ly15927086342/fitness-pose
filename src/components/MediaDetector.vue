@@ -28,6 +28,7 @@ export default {
       modelStatus: MODEL_STATUS.OPEN,
       threshold: 50,
       btnList: "start",
+      countDown: 5,
     };
   },
   beforeUnmount() {
@@ -45,6 +46,17 @@ export default {
     removeListener() {
       this.inputVideo?.removeEventListener("loadeddata", this.init);
     },
+    readyLog(t) {
+      if (t === 0) {
+        log = new Log("default", this.threshold, true);
+      } else {
+        Speaker.getInstance().stop();
+        Speaker.getInstance()?.speak(t);
+        setTimeout(() => {
+          this.readyLog(t - 1);
+        }, 1000);
+      }
+    },
     init() {
       pose.setOptions({
         modelComplexity: 1,
@@ -56,7 +68,10 @@ export default {
       });
       pose.onResults(this.onResults);
 
-      log = new Log("default", this.threshold, true);
+      Speaker.getInstance()?.speak("倒计时");
+      setTimeout(() => {
+        this.readyLog(this.countDown);
+      }, 2000);
 
       const video = document.getElementsByClassName("input_video_2")[0];
       const canvas = document.getElementsByClassName("output_canvas_2")[0];
@@ -87,7 +102,7 @@ export default {
         return;
       }
       // 记录数据
-      log.add(results.poseWorldLandmarks);
+      log?.add(results.poseWorldLandmarks);
       // 录屏
       this.media?.drawResults(results);
     },
@@ -146,6 +161,14 @@ export default {
             <v-icon color="gray">mdi-square</v-icon>
           </v-btn>
         </v-btn-toggle>
+      </v-col>
+      <v-col cols="12" sm="3">
+        <v-text-field
+          v-model="countDown"
+          label="倒计时"
+          placeholder="(秒)"
+          required
+        ></v-text-field>
       </v-col>
       <v-col cols="12" sm="3">
         <v-text-field

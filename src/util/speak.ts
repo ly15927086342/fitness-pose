@@ -26,6 +26,10 @@ export class Speaker {
     this._synth.speak(this._utter);
   }
 
+  speaking() {
+    return this._synth.speaking;
+  }
+
   stop() {
     this._synth.cancel();
   }
