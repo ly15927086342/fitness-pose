@@ -9,11 +9,24 @@
     <script src="/camera_utils.js" crossorigin="anonymous"></script>
     <script src="/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="/pose.js" crossorigin="anonymous"></script>
-    <script src="/jstat.js"></script>
+    <script src="/jstat.js" crossorigin="anonymous"></script>
+    <script src="/gif.js" crossorigin="anonymous"></script>
+    <script src="/gif.worker.js" crossorigin="anonymous"></script>
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_landmark_full.tflite" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_landmark_lite.tflite" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_solution_packed_assets_loader.js" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_solution_simd_wasm_bin.js" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_web.binarypb" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_solution_packed_assets.data" />
+    <link rel="prefetch" as="fetch" crossorigin="anonymous" href="/pose/pose_solution_simd_wasm_bin.wasm" />
     <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils_3d/control_utils_3d.js" crossorigin="anonymous" ></script> -->
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      // speechSynthesis polyfill
+      // !function(){"use strict";window.SpeechSynthesisUtterance||window.speechSynthesis||(window.SpeechSynthesisUtterance=function(a){return{lang:"zh-CN",volume:1,onend:function(){},onstart:function(){},text:a}},window.speechSynthesis={speak:function(a){var b="http://www.corsproxy.com/translate.google.com/translate_tts?&q="+escape(a.text)+"&tl="+a.lang,c=new Audio(b);c.volume=a.volume,c.play(),c.addEventListener("ended",a.onend),c.addEventListener("play",a.onstart)}})}();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

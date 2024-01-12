@@ -2,6 +2,7 @@
 // import { POSE_CONNECTIONS } from "@mediapipe/pose";
 import { eventEmitter } from "./eventEmitter";
 import { DOWNLOAD_URL } from "../constants/event";
+import { POSE_CONNECTIONS } from "@mediapipe/pose";
 
 export class Media {
   canvas;
@@ -39,12 +40,31 @@ export class Media {
       this.canvas.height = height;
       this.canvas.width = width;
     }
+    if (this.canvas.height % 2 === 1) {
+      this.canvas.height += 1;
+    }
+    if (this.canvas.width % 2 === 1) {
+      this.canvas.width += 1;
+    }
     this.ctx = this.canvas.getContext("2d");
     const stream = this.canvas.captureStream();
     const options = { mimeType: "video/webm; codecs=vp9" };
     this.mediaRecorder = new MediaRecorder(stream, options);
     this.handleDataAvailable = this.handleDataAvailable.bind(this);
     this.mediaRecorder.ondataavailable = this.handleDataAvailable;
+    this.gif = new GIF({
+      workers: 4,
+      quality: 10,
+      repeat: -1,
+      transparent: 'black'
+    });
+    this.gif.on('finished', function (blob) {
+      const gifImg = URL.createObjectURL(blob);
+      const aLink = document.createElement('a');
+      aLink.setAttribute('download', 'img');
+      aLink.setAttribute('href', gifImg);
+      aLink.click();
+    });
   }
 
   drawResults(results) {
@@ -64,7 +84,7 @@ export class Media {
 
     // Only overwrite existing pixels.
     canvasCtx.globalCompositeOperation = "source-in";
-    canvasCtx.fillStyle = "#00FF00";
+    canvasCtx.fillStyle = "rgba(0,0,0,0)";
     canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
     // Only overwrite missing pixels.
@@ -79,13 +99,15 @@ export class Media {
 
     canvasCtx.globalCompositeOperation = "source-over";
     drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-      color: "#FFFFFF",
-      radius: 1,
+      color: "#FF0000",
+      lineWidth: 3,
     });
     drawLandmarks(canvasCtx, results.poseLandmarks, {
       color: "#00FFFF",
-      lineWidth: 1,
+      radius: 5,
     });
+    this.gif.addFrame(canvasElement, { copy: true, delay: 50 });
+    // console.log(results)
     // console.log(results.poseLandmarks)
     canvasCtx.restore();
   }
@@ -125,9 +147,10 @@ export class Media {
   handleDataAvailable(event) {
     if (event.data.size > 0) {
       const recordedChunks = [event.data];
-      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const blob = new Blob(recordedChunks, { type: "video/webm; codecs=vp9" });
       const url = URL.createObjectURL(blob);
       eventEmitter.emit(DOWNLOAD_URL, url);
+      this.gif.render();
       // window.URL.revokeObjectURL(url);
     }
   }

@@ -4,34 +4,43 @@
 export class Speaker {
   static _instance?: Speaker;
 
-  private _synth: SpeechSynthesis;
+  private _synth?: SpeechSynthesis;
 
-  private _voice: SpeechSynthesisVoice;
+  private _voice?: SpeechSynthesisVoice;
 
-  private _utter: SpeechSynthesisUtterance;
+  private _utter?: SpeechSynthesisUtterance;
+
+  private _allowUse: boolean = true;
 
   constructor() {
-    this._synth = speechSynthesis;
-    this._voice = this._synth.getVoices().find((s) => s.lang === "zh-CN")!;
+    if (!speechSynthesis) {
+      this._allowUse = false;
+      return;
+    }
+    this._synth = window.speechSynthesis;
+    // console.log(this._synth.getVoices())
+    // this._voice = this._synth.getVoices().find((s) => s.lang === "zh-CN")!;
     this._utter = new SpeechSynthesisUtterance();
-    this.setVoice();
+    // this.setVoice();
   }
 
   setVoice() {
-    this._utter.voice = this._voice;
+    if (!this._allowUse) return;
+    this._utter!.voice = this._voice!;
   }
 
   speak(text: string) {
-    this._utter.text = text;
-    this._synth.speak(this._utter);
+    if (!this._allowUse) return;
+    this._utter!.text = text;
+    this._synth!.speak(this._utter!);
   }
 
   speaking() {
-    return this._synth.speaking;
+    return this._allowUse ? this._synth!.speaking : "";
   }
 
   stop() {
-    this._synth.cancel();
+    this._synth?.cancel();
   }
 
   static getInstance() {

@@ -8,9 +8,8 @@ let pose = new Pose({
   locateFile: (file) => {
     // return `https://ly15927086342.github.io/pose-count/pose/${file}`; // 加载本地文件
     // return `http://192.168.1.5:5173/pose/${file}`;
-    return `${
-      process.env.NODE_ENV === "production" ? import.meta.env.BASE_URL : "/"
-    }pose/${file}`;
+    return `${process.env.NODE_ENV === "production" ? import.meta.env.BASE_URL : "/"
+      }pose/${file}`;
   },
 });
 
@@ -117,7 +116,7 @@ export default {
     },
     init() {
       pose.setOptions({
-        modelComplexity: 1,
+        modelComplexity: 2,
         smoothLandmarks: true,
         enableSegmentation: false,
         smoothSegmentation: false,
@@ -195,7 +194,8 @@ export default {
         this.modelStatus === MODEL_STATUS.OPEN &&
         this.videoStatus === VIDEO_STATUS.PLAY
       ) {
-        if (timestamp - start > this.threshold) {
+        const realInterval = timestamp - start;
+        if (realInterval > this.threshold) {
           start = timestamp;
           await pose.send({ image: this.inputVideo });
         }
@@ -207,9 +207,9 @@ export default {
     },
     validThreshold(val) {
       const num = Number(val);
-      if (isNaN(num) || num < 30 || num > 1000) {
+      if (isNaN(num) || num < 16 || num > 1000) {
         this.threshold = 50;
-        return "请输入30-1000以内的数字";
+        return "请输入16-1000以内的数字";
       }
       return "";
     },
@@ -221,22 +221,11 @@ export default {
   <v-container>
     <v-row>
       <v-col cols="12" sm="6">
-        <v-file-input
-          label="File input"
-          accept="video/*"
-          @update:model-value="updateVideo"
-        ></v-file-input>
+        <v-file-input label="File input" accept="video/*" @update:model-value="updateVideo"></v-file-input>
       </v-col>
       <v-col cols="12" sm="3">
-        <v-text-field
-          v-model="threshold"
-          label="采样间隔"
-          placeholder="(毫秒)"
-          :rules="[validThreshold]"
-          validate-on="blur"
-          required
-          :disabled="mediaState !== 'inactive'"
-        ></v-text-field>
+        <v-text-field v-model="threshold" label="采样间隔" placeholder="(毫秒)" :rules="[validThreshold]" validate-on="blur"
+          required :disabled="mediaState !== 'inactive'"></v-text-field>
         <!-- <v-switch
           v-model="modelStatus"
           color="primary"
@@ -249,10 +238,7 @@ export default {
           <v-btn :disabled="mediaState !== 'inactive'" @click="record('start')">
             <v-icon color="red">mdi-circle</v-icon>
           </v-btn>
-          <v-btn
-            :disabled="mediaState !== 'recording'"
-            @click="record('pause')"
-          >
+          <v-btn :disabled="mediaState !== 'recording'" @click="record('pause')">
             <v-icon color="gray">mdi-pause</v-icon>
           </v-btn>
           <v-btn :disabled="mediaState !== 'paused'" @click="record('resume')">
@@ -285,6 +271,7 @@ export default {
   align-items: center;
   /* justify-content: center; */
 }
+
 .pose-container {
   position: relative;
   width: 100%;
@@ -292,6 +279,7 @@ export default {
   border: 2px solid gray;
   /* border-radius: 10px; */
 }
+
 .input_video {
   width: 100%;
   height: 100%;
@@ -301,6 +289,7 @@ export default {
   border: 2px solid gray;
   /* border-radius: 10px; */
 }
+
 .landmark-grid-container {
   position: absolute;
   right: 0;
@@ -308,14 +297,17 @@ export default {
   width: 250px;
   height: 250px;
 }
+
 .left-bar {
   display: flex;
   flex-direction: column;
 }
+
 .media-button {
   display: flex;
   flex-direction: row;
 }
+
 .output_canvas {
   position: absolute;
   left: 50%;

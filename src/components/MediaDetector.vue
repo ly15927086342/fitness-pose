@@ -68,10 +68,10 @@ export default {
       });
       pose.onResults(this.onResults);
 
-      Speaker.getInstance()?.speak("倒计时");
+      Speaker.getInstance()?.speak("请确保身体在镜头以内，倒计时");
       setTimeout(() => {
         this.readyLog(this.countDown);
-      }, 2000);
+      }, 3000);
 
       const video = document.getElementsByClassName("input_video_2")[0];
       const canvas = document.getElementsByClassName("output_canvas_2")[0];
@@ -122,7 +122,7 @@ export default {
           this.media?.ctxClear();
           camera.stop();
           Speaker.getInstance().stop();
-          log.download();
+          log?.download();
           break;
         default:
           break;
