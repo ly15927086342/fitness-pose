@@ -1,10 +1,10 @@
 <script lang="ts">
 // import HelloWorld from './components/HelloWorld.vue'
-import PoseDetector from "./components/PoseDetector.vue";
-import MediaDetector from "./components/MediaDetector.vue";
-import ImageDetector from "./components/ImageDetector.vue";
-import Download from "./components/Download.vue";
-import Analysis from "./components/Analysis.vue";
+// import PoseDetector from "./components/PoseDetector.vue";
+// import MediaDetector from "./components/MediaDetector.vue";
+// import ImageDetector from "./components/ImageDetector.vue";
+// import Download from "./components/Download.vue";
+// import Analysis from "./components/Analysis.vue";
 import Model from "./components/Model.vue";
 import ModelConfigBar from './components/modelConfigBar.vue';
 import File from './components/File.vue';
@@ -22,11 +22,11 @@ export default {
     };
   },
   components: {
-    PoseDetector,
-    MediaDetector,
-    ImageDetector,
-    Download,
-    Analysis,
+    // PoseDetector,
+    // MediaDetector,
+    // ImageDetector,
+    // Download,
+    // Analysis,
     Model,
     ModelConfigBar,
     File

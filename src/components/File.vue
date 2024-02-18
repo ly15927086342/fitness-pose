@@ -15,14 +15,23 @@
           <v-radio v-for="item in loadTypeList" :key="item" :label="item" :value="item"></v-radio>
         </v-radio-group>
       </v-col>
-      <v-col cols="12" sm="6">
+      <v-col v-show="type === 'VIDEO'" cols="12" sm="2">
+        <v-text-field v-model="ratio" label="速率"></v-text-field>
+      </v-col>
+      <v-col cols="12" sm="2">
         <v-btn block @click="beginOrEndDetect">{{ isWorking ? '结束识别' : '开始识别' }}</v-btn>
+      </v-col>
+      <v-col cols="12" sm="2">
+        <v-btn v-show="type === 'IMAGE'" @click="downloadImg" :disabled="!allowDownload">下载图片</v-btn>
+      </v-col>
+      <v-col cols="12" sm="2">
+        <v-btn v-show="type === 'VIDEO' && loadType === 'GIF'" @click="downloadGif"
+          :disabled="!allowDownload">下载GIF</v-btn>
+        <v-btn v-show="type === 'VIDEO' && loadType === 'WEBM'" @click="downloadWebm"
+          :disabled="!allowDownload">下载视频</v-btn>
       </v-col>
     </v-row>
     <canvas ref="output_canvas" class="output_canvas"></canvas>
-    <v-btn v-show="type === 'IMAGE'" @click="downloadImg" :disabled="!allowDownload">下载图片</v-btn>
-    <v-btn v-show="type === 'VIDEO' && loadType === 'GIF'" @click="downloadGif" :disabled="!allowDownload">下载GIF</v-btn>
-    <v-btn v-show="type === 'VIDEO' && loadType === 'WEBM'" @click="downloadWebm" :disabled="!allowDownload">下载视频</v-btn>
   </v-col>
 </template>
 
@@ -44,7 +53,8 @@ export default {
       mediaRecorder: null,
       loadTypeList: ['GIF', 'WEBM'],
       loadType: 'WEBM',
-      webm: ''
+      webm: '',
+      ratio: 1,
     }
   },
   mounted() {
@@ -109,6 +119,7 @@ export default {
       }
       const model = await getModelIns();
       if (this.type === 'VIDEO') {
+        this.$refs.input_video.playbackRate = this.ratio;
         this.$refs.input_video.play();
         if (this.loadType === 'GIF') {
           this.gif = new GIF({
@@ -134,7 +145,7 @@ export default {
         await this.loop();
       } else if (this.type === 'IMAGE') {
         const res = model.detect(this.$refs.input_image);
-        model.processResults(this.$refs.input_image, this.$refs.output_canvas, res);
+        await model.processResults(this.$refs.input_image, this.$refs.output_canvas, res);
         this.allowDownload = true;
       }
     },
@@ -147,7 +158,7 @@ export default {
       let videoTime = video.currentTime;
       if (lastVideoTime !== videoTime) {
         const res = model.detectForVideo(video, startTimeMs);
-        model.processVideoResults(video, canvas, res);
+        await model.processVideoResults(video, canvas, res);
         if (this.loadType === 'GIF') {
           this.gif.addFrame(canvas, { copy: true, delay: lastVideoTime === -1 ? 0 : (videoTime - lastVideoTime) * 1000 });
         }
